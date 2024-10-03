@@ -4,6 +4,7 @@ import express from "express";
 import connectDB from "./config/db.js";
 import productRoutes from "./routes/productRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
+import cookieParser from "cookie-parser";
 const port = process.env.PORT || 5000;
 // The || is for if something doesn't work with the.env file
 // The frontend is deployed on port 3000 so we're doing 5000 here
@@ -12,6 +13,12 @@ import { notFound, errorHandler } from "./middleware/errorMiddleware.js";
 
 connectDB();
 const app = express();
+
+// body parser middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+app.use(cookieParser());
 
 app.get("/", (req, res) => {
   res.send("API is running...");

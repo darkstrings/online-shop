@@ -1,4 +1,5 @@
 import express from "express";
+import { protect, admin } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 import {
@@ -15,10 +16,10 @@ import {
 
 // remember these will all have /api/users at the beginning so it'll differentiate from productController routes
 
-router.route("/").post(registerUser).get(getUsers); ///"api/users"
+router.route("/").post(registerUser).get(protect, admin, getUsers); ///"api/users" (all users)
 router.post("/logout", logoutUser); //"api/users/logout"
-router.post("/login", authUser); //"api/users/login"
-router.route("/profile").get(getUserProfile).put(updateUserProfile); //"api/users/profile"
-router.route("/:id").get(getUserById).delete(deleteUser).put(updateUser); //"api/users/:id etc"
+router.post("/auth", authUser); //"api/users/login"
+router.route("/profile").get(protect, getUserProfile).put(protect, updateUserProfile); //"api/users/profile"
+router.route("/:id").get(protect, admin, getUserById).delete(protect, admin, deleteUser).put(protect, admin, updateUser); //"api/users/:id etc"
 
 export default router;

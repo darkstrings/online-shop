@@ -6,6 +6,8 @@ export const updateCart = (state) => {
   //   Calculate items price (subtotal before tax and shipping)
   const itemsPrice = state.cartItems.reduce((acc, item) => acc + (item.price * 100 * item.qty) / 100, 0);
 
+  state.itemsPrice = addDecimals(itemsPrice);
+
   //   Calculate items shipping price (if order is > 100 = free : 10)
   const shippingPrice = itemsPrice > 100 ? 0 : 10;
   state.shippingPrice = addDecimals(shippingPrice);

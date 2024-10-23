@@ -1,6 +1,5 @@
 import asyncHandler from "../middleware/asyncHandler.js";
 import User from "../models/userModel.js";
-import jwt from "jsonwebtoken";
 import generateToken from "../utils/generateToken.js";
 
 /////////////////////////////////////////////// AUTHENTICATE USER
@@ -120,7 +119,8 @@ const updateUserProfile = asyncHandler(async (req, res) => {
 // @route   GET /api/users
 // @access  private/admin
 const getUsers = asyncHandler(async (req, res) => {
-  res.send("Get all users (admin)");
+  const users = await User.find({});
+  res.status(200).json(users);
 });
 
 ///////////////////////////////////////////////// GET USER BY ID (ADMIN LEVEL)
@@ -128,7 +128,13 @@ const getUsers = asyncHandler(async (req, res) => {
 // @route   GET /api/users/:id
 // @access  private/admin
 const getUserById = asyncHandler(async (req, res) => {
-  res.send("Get user by id (admin)");
+  const user = await User.findById(req.params.id).select("-password");
+  if (user) {
+    res.status(200).json(user);
+  } else {
+    res.status(404);
+    throw new Error("User not found");
+  }
 });
 
 ///////////////////////////////////////////////// DELETE USER (ADMIN LEVEL)
@@ -136,7 +142,18 @@ const getUserById = asyncHandler(async (req, res) => {
 // @route   DELETE /api/users/:id
 // @access  private/admin
 const deleteUser = asyncHandler(async (req, res) => {
-  res.send("Delete user (admin)");
+  const user = await User.findById(req.params.id);
+  if (user) {
+    if (user.isAdmin) {
+      res.status(400);
+      throw new Error("Users of admin status cannot be deleted");
+    }
+    await User.deleteOne({ _id: req.params.id });
+    res.status(200).json({ message: "User deleted successfully" });
+  } else {
+    res.status(404);
+    throw new Error("User not found");
+  }
 });
 
 ///////////////////////////////////////////////// UPDATE USER (ADMIN LEVEL)
@@ -144,7 +161,27 @@ const deleteUser = asyncHandler(async (req, res) => {
 // @route   PUT /api/users/profile
 // @access  private
 const updateUser = asyncHandler(async (req, res) => {
-  res.send("Update user (admin)");
+  const user = await User.findById(req.params.id);
+  if (user) {
+    user.name = req.body.name || user.name;
+    // change the name to the name in the request body or keep it as is if there isn't one.
+
+    user.email = req.body.email || user.email;
+    user.isAdmin = Boolean(req.body.isAdmin);
+
+    const updatedUser = await user.save();
+    //  saving the updated user document to the database using Mongoose.
+
+    res.status(200).json({
+      _id: updatedUser._id,
+      name: updatedUser.name,
+      email: updatedUser.email,
+      isAdmin: updatedUser.isAdmin,
+    });
+  } else {
+    res.status(404);
+    throw new Error("User not found");
+  }
 });
 
 export { authUser, registerUser, logoutUser, getUserProfile, updateUserProfile, getUsers, getUserById, deleteUser, updateUser };
